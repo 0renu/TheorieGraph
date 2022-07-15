@@ -1,69 +1,110 @@
-#from tkinter import ttk
 from tkinter import *
-#from tkinter.ttk import *
+import tkinter
 import Graphs
 
-def pgcd(a,b):
-    while b!=0:
-        r=a%b
-        a,b=b,r
-    return a
-def is_prime(n):
-    if n > 1:
-        for i in range(2, int(n/2)+1):
-            if (n % i) == 0:
-                break
-            else:
-                return True
-    else:
-       return False
-
-def _create_circle(self, x, y, r, **kwargs):
-    return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
-Canvas.create_circle = _create_circle
-
-def create_node(node,posx,posy):
-    canvas.create_circle(posx,posy,(h//c),width = 2)
-    canvas.create_text(posx,posy,text=node.label)
-
-def rearrange_draw_node(L):
-    n = len(L)   
-    nL=[]
-    boul = 0
-    a = 0
-    b = pgcd(n//2,n)
-    if is_prime(n) :
-        b = pgcd((n-1)//2,(n-1))
-        nL.append([L[0]])
-        boul = 1
-        
-    for i in range (0+boul,n,b):
-        nL.append(L[i:i+b])           
-    return nL
+def create_window() -> tkinter.Tk:
+    """
+    Create and return the main window
+    """
+    return Tk()
 
 
-G = Graphs.buildG(False,False)
-root = Tk()
-l = 800
-h = 650
-c = 30
-canvas = Canvas(root,width=l,height=h,borderwidth=0,highlightthickness=0)
-canvas.grid()
-
-label = Label(anchor='nw',justify ='left', text=G.status())
-label.grid()
+def create_upper_canvas(root, h, l) -> tkinter.Canvas:
+    """
+    Create and return the big canvas
+    """
+    return Canvas(
+        root, width=l, height=h, borderwidth=0, highlightthickness=0, bg="yellow"
+    )
 
 
+def create_lower_canvas(root, h, l, G, upper_canvas, size) -> tkinter.Canvas:
+    """
+    Create and return the small canvas with the buttons
+    """
+    canvas = Canvas(root, width=l, height=h, bg="blue")
 
-i=0
-j=1
-for sL in rearrange_draw_node(G.getV()):
-    for x in sL:
-        i +=1        
-        create_node(x,(h//c)+(c*5*i),(h//c)+(c * 5*j))
-    i = 0
-    j+= 1
+    # Add node
+    add_node_field = Text(canvas, height=5, width=20)
+    add_node_button = Button(
+        canvas,
+        text="Add Node (A)",
+        height=5,
+        width=20,
+        command=lambda: onClick_add_node(add_node_field, G),
+    )
+    add_node_button.grid(row=0, column=0)
+    add_node_field.grid(row=0, column=1)
 
-    
-root.mainloop()
+    # Add edge
+    add_edge_field = Text(canvas, height=5, width=20)
+    add_edge_button = Button(
+        canvas,
+        text="Add Edge (A,B,2)",
+        height=5,
+        width=20,
+        command=lambda: onClick_add_edge(add_edge_field, G),
+    )
+    add_edge_button.grid(row=1, column=0)
+    add_edge_field.grid(row=1, column=1)
 
+    canvas.grid_propagate(False)
+
+    return canvas
+
+
+def onClick_add_node(text_field, G):
+    """
+    When Add Node button is pressed
+    """
+    text = text_field.get("1.0", "end-1c")
+    # Vérifier texte ici
+
+    G.add_node(text)
+    # Erase text
+    text_field.delete("1.0", END)
+
+
+def onClick_add_edge(text_field, G):
+    """
+    When add Edge button is pressed
+    """
+    # Add Edge
+    text = text_field.get("1.0", "end-1c")
+    # Verifier texte ici
+    # Avec si c'est orienté ou non
+    # regex =
+    # match = re.search(regex, text)
+    L = text.split(",")
+    G.add_edge(L)
+
+    # Erase text
+    text_field.delete("1.0", END)
+
+def __main__():
+
+    # Instanciate graph
+    G = Graphs.buildG()
+
+    # Create the window
+    l = 600
+    upper_canvas_h = 400
+    lower_canvas_h = 200
+    size = 50
+    root = create_window()
+    upper_canvas = create_upper_canvas(root, upper_canvas_h, l)
+    lower_canvas = create_lower_canvas(root, lower_canvas_h, l, G, upper_canvas, size)
+    upper_canvas.pack()
+    lower_canvas.pack()
+    upper_canvas.pack_propagate(False)
+    lower_canvas.pack_propagate(False)
+    G.canvas = upper_canvas
+
+    # Draw graph
+    G.draw()
+
+
+    root.mainloop()
+
+
+__main__()
