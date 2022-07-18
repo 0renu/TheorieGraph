@@ -56,6 +56,12 @@ class Node:
         m.add_command(label ="Supprimer le noeud", command = self.delete)
         m.tk_popup(event.x_root, event.y_root)
 
+    def set_color (self, color):
+        self.color = color
+        self.canvas.itemconfigure(self.cercle ,fill= self.color)
+    def get_color (self) :
+        return self.canvas.itemcget(self.cercle ,"fill")
+
     def draw(self, G, x, y) -> None:
         """
         Draw node on the canvas
@@ -64,13 +70,12 @@ class Node:
         self.posx = x
         self.posy = y
         self.G = G
-
         # Création du petit canvas et ajout du petit canvas dans le grand
         self.canvas = Canvas(self.G.canvas, width=self.G.size, height=self.G.size, background="#000000")
         self.G.canvas.create_window(x, y, anchor=NW, window=self.canvas)
 
         # Création du cercle et du texte
-        self.canvas.create_oval(
+        self.cercle = self.canvas.create_oval(
             0, 0, self.G.size, self.G.size, width=2, fill="white", tag=("clickable", "node")
         )
         self.canvas.create_text(self.G.size / 2, self.G.size / 2, text=self.label, tag=("clickable"))
@@ -99,6 +104,7 @@ class Node:
         # Destroy on the graph
         self.canvas.destroy()
 
+        # self.G.need_to_update = True
 
 class Edge:
     def __init__(self, n1: Node, n2: Node, w=None, is_oriented=False) -> None:
@@ -158,7 +164,7 @@ class Edge:
         '''
         # Open menu
         m = Menu(self.G.canvas, tearoff = 0)
-        m.add_command(label ="Supprimer l'arete", command = self.delete)
+        m.add_command(label ="Supprimer l'arete", command = lambda: self.delete(remove = True))
         m.add_command(label ="Changer le poids", command = self.update_weight_window)
         m.add_command(label ="Changer la couleur", command = self.change_color)
         m.tk_popup(event.x_root, event.y_root)
@@ -192,12 +198,18 @@ class Edge:
         self.poids_var.set(new_weight)
         win.destroy()
 
-    def delete(self) -> None:
+    def delete(self, remove = False) -> None:
         """
         Erase the line and weight text from the canvas
+        Remove the edge from the edge list
         """
         self.G.canvas.delete(self.line)
         self.text.destroy()
+        # self.G.need_to_update = True
+
+        # Remove from edge list (not called when only moving nodes)
+        if remove:
+            self.G.E.remove(self)
 
     def change_color(self) -> None:
         """
@@ -216,6 +228,52 @@ class Graph:
 
         self.canvas = None  # The canvas in which the graph is drawn
         self.size = 50  # Default nodes size
+        
+        # self.matrix = None
+        # self.need_to_update = True
+
+    # def update_matrix(self) -> None:
+    #     '''
+    #     Met à jour la matrice d'adjacence
+    #     '''
+    #     if self.need_to_update:
+
+    #         matrix = [[0 for node in self.V] for node in self.V]
+
+    #         for edge in self.E:
+    #             indice_1 = None
+    #             indice_2 = None
+    #             for i, node in enumerate(self.V):
+    #                 if node == edge.bord1:
+    #                     indice_1 = i
+    #                 if node == edge.bord2:
+    #                     indice_2 = i
+
+    #             # bord1 -> bord2
+    #             matrix[indice_1][indice_2] = 1
+
+    #             if not self.isO:
+    #                 # bord2 -> bord1
+    #                 matrix[indice_2][indice_1] = 1
+
+    #         self.matrix = matrix
+    #         self.need_to_update = False
+    def all_white_node (self):
+        for v in self.V:
+            v.set_color ("white")
+            
+    def adj(self, node) -> List[Node]:
+        '''
+        Return les noeuds adjacents
+        '''
+        # A -> B
+        L = [edge.bord2 for edge in self.E if edge.bord1 == node]
+
+        # Si c'est pas orienté, on ajoute les B -> A
+        if not self.isO:    
+            L.extend([edge.bord1 for edge in self.E if edge.bord2 == node])
+
+        return L
 
     def add_node(self, label) -> Node:
         """
@@ -226,6 +284,7 @@ class Graph:
             node = Node(label)
             self.V.append(node)
             node.draw(self, 300, 300)
+            # self.need_to_update = True
             return node
         else:
             print("Node already exists")
@@ -250,6 +309,7 @@ class Graph:
         edge = Edge(bord1, bord2, w=edge_list[2], is_oriented=self.isO)
         edge.draw(self)
         self.E.append(edge)
+        # self.need_to_update = True
         return edge
 
     def affV(self):

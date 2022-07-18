@@ -1,6 +1,7 @@
 from tkinter import *
 import tkinter
 import Graphs
+import bfs
 
 def create_window() -> tkinter.Tk:
     """
@@ -37,6 +38,7 @@ def create_lower_canvas(root, h, l, G, upper_canvas, size) -> tkinter.Canvas:
     add_node_field.grid(row=0, column=1)
 
     # Add edge
+
     add_edge_field = Text(canvas, height=5, width=20)
     add_edge_button = Button(
         canvas,
@@ -47,7 +49,17 @@ def create_lower_canvas(root, h, l, G, upper_canvas, size) -> tkinter.Canvas:
     )
     add_edge_button.grid(row=1, column=0)
     add_edge_field.grid(row=1, column=1)
-
+    
+    BFS_X_button = Button(
+        canvas,
+        text="BFS_X",
+        height=1,
+        width=5,
+        command=lambda: onClick_BFS_X (canvas , G)
+    )
+    BFS_X_button.grid(row=0, column=2 , sticky='nw')
+    
+    
     canvas.grid_propagate(False)
 
     return canvas
@@ -80,6 +92,12 @@ def onClick_add_edge(text_field, G):
 
     # Erase text
     text_field.delete("1.0", END)
+    
+def onClick_BFS_X (canvas , G):
+    G.all_white_node()
+    BLOCK = bfs.BFS_X(G)
+    label_response = Label(canvas , text = str(BLOCK), justify ='left')
+    label_response.grid(row=0,column=3, sticky = 'nw')
 
 def __main__():
 
@@ -102,7 +120,6 @@ def __main__():
 
     # Draw graph
     G.draw()
-
 
     root.mainloop()
 
