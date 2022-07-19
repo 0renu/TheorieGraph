@@ -3,6 +3,7 @@ from math import sqrt, ceil
 from typing import List
 from math import cos, sin, atan2, sin
 from tkinter.colorchooser import askcolor
+import Feuille
 
 
 class Node:
@@ -53,6 +54,7 @@ class Node:
         When right clicking on a node
         '''
         m = Menu(self.canvas, tearoff = 0)
+        m.add_command(label = "BFS_u", command = lambda: Feuille.onClick_BFS_u(self.G,self))
         m.add_command(label ="Supprimer le noeud", command = self.delete)
         m.tk_popup(event.x_root, event.y_root)
 

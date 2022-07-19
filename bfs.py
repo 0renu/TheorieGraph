@@ -9,16 +9,16 @@ def BFS_u (G,node) :
     F = [node]
     P[i] = node
     M[i] = 1
+    node.set_color("grey")
     while F != []:
-        z = F.pop(0)
+        z = F.pop(0)        
         for x in G.adj(z):
             if x.get_color() == "white" :
                 i += 1
                 x.set_color("grey")
                 M[i] = 1
-                P[i] = z
-                F.append(x)
-                
+                P[i] = x
+                F.append(x)            
                 
     return M,P
 
@@ -27,7 +27,7 @@ def BFS_X (G):
     """
     applique BFS sur la liste de tout les noeuds
     """
-    i = -1
+    i = -1    
     BLOCK = [0 for v in G.V]
     F = []
     cs = 0
@@ -47,4 +47,5 @@ def BFS_X (G):
                     if BLOCK[i] == 0 :
                         BLOCK[i] = cs
                         F.append(x)
+    G.all_white_node()
     return BLOCK

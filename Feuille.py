@@ -1,7 +1,8 @@
+import Feuille
 from tkinter import *
 import tkinter
-import Graphs
 import bfs
+import Graphs
 
 def create_window() -> tkinter.Tk:
     """
@@ -10,20 +11,36 @@ def create_window() -> tkinter.Tk:
     return Tk()
 
 
-def create_upper_canvas(root, h, l) -> tkinter.Canvas:
+def create_upper_canvas(root, h, l,G) -> tkinter.Canvas:
     """
     Create and return the big canvas
     """
-    return Canvas(
-        root, width=l, height=h, borderwidth=0, highlightthickness=0, bg="yellow"
-    )
+    canvas = Canvas(root, width=l, height=h, borderwidth=0, highlightthickness=0, bg="yellow")
+    clear_button = Button(
+        canvas,
+        text="clear",
+        height=1,
+        width=5,
+        command=lambda:clear(G),
+        )
+    clear_button.grid(row=0,column=1,sticky='nw')
+    canvas.grid_propagate(False)
+    
+    return canvas
 
-
+def clear(G):
+     G.all_white_node()
+     label_response.configure(text="")
+    
 def create_lower_canvas(root, h, l, G, upper_canvas, size) -> tkinter.Canvas:
     """
     Create and return the small canvas with the buttons
     """
     canvas = Canvas(root, width=l, height=h, bg="blue")
+    global label_response
+    label_response = Label(canvas , text = "", justify ='left')
+    label_response.grid(row=0,column=3, sticky = 'nw')    
+
 
     # Add node
     add_node_field = Text(canvas, height=5, width=20)
@@ -55,7 +72,7 @@ def create_lower_canvas(root, h, l, G, upper_canvas, size) -> tkinter.Canvas:
         text="BFS_X",
         height=1,
         width=5,
-        command=lambda: onClick_BFS_X (canvas , G)
+        command=lambda: onClick_BFS_X (G)
     )
     BFS_X_button.grid(row=0, column=2 , sticky='nw')
     
@@ -93,14 +110,24 @@ def onClick_add_edge(text_field, G):
     # Erase text
     text_field.delete("1.0", END)
     
-def onClick_BFS_X (canvas , G):
+def onClick_BFS_X(G):
+    
     G.all_white_node()
-    BLOCK = bfs.BFS_X(G)
-    label_response = Label(canvas , text = str(BLOCK), justify ='left')
-    label_response.grid(row=0,column=3, sticky = 'nw')
+    BLOCK = bfs.BFS_X(G)    
+    label_response.configure(label_response ,text=str(BLOCK))
+    
+def onClick_BFS_u (G, node):
+    G.all_white_node()
+    M,P = bfs.BFS_u(G,node)
+    P = [z.label for z in P if z != None]
+    label_response.configure(text= str(P)+"\n"+str(M))
+    
+    
 
+    
+    
 def __main__():
-
+    
     # Instanciate graph
     G = Graphs.buildG()
 
@@ -110,7 +137,7 @@ def __main__():
     lower_canvas_h = 200
     size = 50
     root = create_window()
-    upper_canvas = create_upper_canvas(root, upper_canvas_h, l)
+    upper_canvas = create_upper_canvas(root, upper_canvas_h, l,G)
     lower_canvas = create_lower_canvas(root, lower_canvas_h, l, G, upper_canvas, size)
     upper_canvas.pack()
     lower_canvas.pack()
@@ -120,7 +147,7 @@ def __main__():
 
     # Draw graph
     G.draw()
-
+    
     root.mainloop()
 
 
