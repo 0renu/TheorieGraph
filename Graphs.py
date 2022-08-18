@@ -99,14 +99,12 @@ class Node:
             if edge.bord1 != self and edge.bord2 != self:
                 L.append(edge)
             else:
-                edge.delete()
+                edge.delete(True)
         self.G.E = L
         # Remove from node list
         self.G.V.remove(self)
         # Destroy on the graph
         self.canvas.destroy()
-
-        # self.G.need_to_update = True
 
 class Edge:
     def __init__(self, n1: Node, n2: Node, w=None, is_oriented=False) -> None:
@@ -152,12 +150,13 @@ class Edge:
         )
 
         # Text label
-        # Label is empty but still exists if there is no weight
         self.text = Label(self.G.canvas, textvariable=self.poids_var, bg = "red")
         self.text.place(x=xC, y=yC, anchor="sw")
         self.text.bind('<Button-3>', self.onClick)
+       
+           
 
-        if self.is_oriented:  # Ajoute une flèche
+        if self.is_oriented :  # Ajoute une flèche
             self.G.canvas.itemconfig(self.line, arrow="last", arrowshape=(20, 20, 5))
 
     def onClick(self, event):
@@ -207,12 +206,12 @@ class Edge:
         """
         self.G.canvas.delete(self.line)
         self.text.destroy()
-        # self.G.need_to_update = True
+        
 
         # Remove from edge list (not called when only moving nodes)
         if remove:
             self.G.E.remove(self)
-
+            self.G.update_adj()
     def change_color(self) -> None:
         """
         Change the color
@@ -231,51 +230,24 @@ class Graph:
         self.canvas = None  # The canvas in which the graph is drawn
         self.size = 50  # Default nodes size
         
-        # self.matrix = None
-        # self.need_to_update = True
-
-    # def update_matrix(self) -> None:
-    #     '''
-    #     Met à jour la matrice d'adjacence
-    #     '''
-    #     if self.need_to_update:
-
-    #         matrix = [[0 for node in self.V] for node in self.V]
-
-    #         for edge in self.E:
-    #             indice_1 = None
-    #             indice_2 = None
-    #             for i, node in enumerate(self.V):
-    #                 if node == edge.bord1:
-    #                     indice_1 = i
-    #                 if node == edge.bord2:
-    #                     indice_2 = i
-
-    #             # bord1 -> bord2
-    #             matrix[indice_1][indice_2] = 1
-
-    #             if not self.isO:
-    #                 # bord2 -> bord1
-    #                 matrix[indice_2][indice_1] = 1
-
-    #         self.matrix = matrix
-    #         self.need_to_update = False
+        self.update_adj()
+   
+    def update_adj(self) -> None:
+        self.dict_node_adjs = dict()
+        for v in self.V:     
+            # A -> B
+            L = [edge.bord2 for edge in self.E if edge.bord1 == v]
+            # Si c'est pas orienté, on ajoute les B -> A
+            if not self.isO:    
+                L.extend([edge.bord1 for edge in self.E if edge.bord2 == v])  
+            self.dict_node_adjs[v] = L
+            
+    def adj(self, node) -> List[Node]:
+        return self.dict_node_adjs[node]
+    
     def all_white_node (self):
         for v in self.V:
             v.set_color ("white")
-            
-    def adj(self, node) -> List[Node]:
-        '''
-        Return les noeuds adjacents
-        '''
-        # A -> B
-        L = [edge.bord2 for edge in self.E if edge.bord1 == node]
-
-        # Si c'est pas orienté, on ajoute les B -> A
-        if not self.isO:    
-            L.extend([edge.bord1 for edge in self.E if edge.bord2 == node])
-
-        return L
 
     def add_node(self, label) -> Node:
         """
@@ -286,7 +258,7 @@ class Graph:
             node = Node(label)
             self.V.append(node)
             node.draw(self, 300, 300)
-            # self.need_to_update = True
+            self.update_adj()
             return node
         else:
             print("Node already exists")
@@ -307,15 +279,20 @@ class Graph:
             if existing_edge.bord1 == bord1 and existing_edge.bord2 == bord2:
                 print("Edge already exist")
                 return None
-
-        edge = Edge(bord1, bord2, w=edge_list[2], is_oriented=self.isO)
+        if self.isW == True:
+            edge = Edge(bord1, bord2, w=edge_list[2], is_oriented=self.isO)
+        else:
+            edge = Edge(bord1, bord2, w=None, is_oriented=self.isO)
         edge.draw(self)
         self.E.append(edge)
-        # self.need_to_update = True
+        self.update_adj()
         return edge
 
-    def affV(self):
-        return [x.label for x in self.getV()]
+    def affV(self)-> str:
+        c = ""
+        for x in self.V:
+            c = c+ x.label +", "
+        return c
 
     def getE(self):
         return [(x.bord1, x.bord2, x.poids) for x in self.E]
@@ -327,7 +304,7 @@ class Graph:
         return f"Nodes: {self.affV()}\nEdges: {self.affE()}\nisOriented: {self.isO}\nisWeighted: {self.isW}"
 
     def objectdetail(self) -> str:
-        return f"Nodes: {self.getV()}\nEdges: {self.getE()}"
+        return f"Nodes: {self.V()}\nEdges: {self.getE()}"
 
     def draw(self, size=50, espacement=50, x=20, y=100) -> None:
         """
@@ -395,28 +372,28 @@ def buildG() -> Graph:
     Gets the input and builds the Nodes/Edges/Graph
     Returns the final Graph
     """
+    isO = None
+    isW = None
     V = []
     E = []
-    # isO = input("Le graph est-il orrienté ?(oui/non): ")
-    # while isO not in  ['oui', "non"]:
-    #     isO = input("Le graph est-il orrienté ?(oui/non): ")
-    # if isO == "oui":
-    #     isO = True
-    # else:
-    #     isO = False
-
-    # isW = input("Les arêtes ont elles un poids ?(oui/non): ")
-    # while isW not in  ['oui', "non"]:
-    #     isW = input("Les arêtes ont elles un poids ?(oui/non): ")
-    # if isW == "oui":
-    #     isW = True
-    # else:
-    #     isW = False
-    isO = True
-    isW = True
+    a = " "
+    while a not in  ["oui", "non"]:
+        a = input("Le graph est-il orrienté ?(oui/non): ")
+        if a == "oui":
+            print ("ici")
+            isO = True
+        else:
+            isO = False
+    a = " "
+    while a not in  ["oui", "non"]:
+        a = input("Les arêtes ont elles un poids ?(oui/non): ")
+        if a == "oui" :
+            isW = True
+        else:
+            isW = False
     a = " "
     while a != "":
-        a = input("Entrez les noeuds ('stop' pour passer à la suite): ")
+        a = input("Entrez les noeuds: ")
         if a != "":
             n = Node(a)
             V.append(n)
@@ -425,13 +402,10 @@ def buildG() -> Graph:
     a = " "
     edge_list = list()  # List of edges
     while a != "":
-        a = input(
-            "Entrez les aretes (avec noeuds existant ex: A,B,4 ou A,B)('stop' pour passer à la suite): "
-        )
+        a = input("Entrez les aretes (avec noeuds existant ex: A,B,4 ou A,B): ")
         if a != "":
             a = a.split(",")
-
-            if isW:
+            if isW :
                 weight = a[2]
             else:
                 weight = None
@@ -439,14 +413,16 @@ def buildG() -> Graph:
             # Get the nodes
             bord_1 = None
             bord_2 = None
+            
+
             for node in V:
                 if node.label == a[0]:
                     bord_1 = node
                 if node.label == a[1]:
                     bord_2 = node
 
-            if bord_1 and bord_2:  # Si les nodes existent
-                edge_list.append([a[0], a[1]])
-                E.append(Edge(bord_1, bord_2, w=weight, is_oriented=isO))
+                if bord_1 and bord_2:  # Si les nodes existent
+                    edge_list.append([a[0], a[1]])
+                    E.append(Edge(bord_1, bord_2, w=weight, is_oriented=isO))
     G = Graph(V, E, isO, isW)
     return G

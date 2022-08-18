@@ -25,6 +25,7 @@ def create_upper_canvas(root, h, l,G) -> tkinter.Canvas:
         )
     clear_button.grid(row=0,column=1,sticky='nw')
     canvas.grid_propagate(False)
+
     
     return canvas
 
@@ -72,7 +73,7 @@ def create_lower_canvas(root, h, l, G, upper_canvas, size) -> tkinter.Canvas:
         text="BFS_X",
         height=1,
         width=5,
-        command=lambda: onClick_BFS_X (G)
+        command=lambda: onClick_BFS_X(G)
     )
     BFS_X_button.grid(row=0, column=2 , sticky='nw')
     
@@ -101,6 +102,7 @@ def onClick_add_edge(text_field, G):
     # Add Edge
     text = text_field.get("1.0", "end-1c")
     # Verifier texte ici
+
     # Avec si c'est orienté ou non
     # regex =
     # match = re.search(regex, text)
@@ -113,8 +115,8 @@ def onClick_add_edge(text_field, G):
 def onClick_BFS_X(G):
     
     G.all_white_node()
-    BLOCK = bfs.BFS_X(G)    
-    label_response.configure(label_response ,text=str(BLOCK))
+    NODES,BLOCK = bfs.BFS_X(G)    
+    label_response.configure(label_response ,text=str(NODES)+"\n"+str(BLOCK))
     
 def onClick_BFS_u (G, node):
     G.all_white_node()
